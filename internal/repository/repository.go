@@ -11,6 +11,24 @@ import (
 	"github.com/mxmkiv/subscriptions-service/internal/domain"
 )
 
+// DTO
+type CreateDTO struct {
+	ServiceName string
+	Price       int
+	UserID      uuid.UUID
+	StartDate   time.Time
+	EndDate     *time.Time
+}
+
+type UpdateDTO struct {
+	ServiceName string
+	Price       int
+	UserID      uuid.UUID
+	StartDate   time.Time
+	EndDate     *time.Time
+}
+
+// filter struct
 type ListFilter struct {
 	UserID      *uuid.UUID
 	ServiceName *string
@@ -24,9 +42,9 @@ type SumFilter struct {
 }
 
 type Repository interface {
-	Create(ctx context.Context, sub domain.CreateDTO) (domain.Subscription, error)
+	Create(ctx context.Context, dto CreateDTO) (*domain.Subscription, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Subscription, error)
-	Update(ctx context.Context, id uuid.UUID, sub domain.UpdateDTO) (*domain.Subscription, error)
+	Update(ctx context.Context, id uuid.UUID, dto UpdateDTO) (*domain.Subscription, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	List(ctx context.Context, filter ListFilter) ([]domain.Subscription, error)
 	SumByPeriod(ctx context.Context, filter SumFilter) (int, error)
@@ -40,7 +58,7 @@ func New(db *sql.DB) Repository {
 	return &postgresRepository{db: db}
 }
 
-func (r *postgresRepository) Create(ctx context.Context, dto domain.CreateDTO) (domain.Subscription, error) {
+func (r *postgresRepository) Create(ctx context.Context, dto CreateDTO) (*domain.Subscription, error) {
 	query := `
 		INSERT INTO subscriptions (service_name, price, user_id, start_date, end_date)
 		VALUES ($1, $2, $3, $4, $5)
@@ -58,10 +76,10 @@ func (r *postgresRepository) Create(ctx context.Context, dto domain.CreateDTO) (
 
 	err := r.db.QueryRowContext(ctx, query, dto.ServiceName, dto.Price, dto.UserID, dto.StartDate, dto.EndDate).Scan(&sub.ID)
 	if err != nil {
-		return domain.Subscription{}, fmt.Errorf("failed to create subscription: %w", err)
+		return nil, fmt.Errorf("failed to create subscription: %w", err)
 	}
 
-	return sub, nil
+	return &sub, nil
 }
 
 func (r *postgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Subscription, error) {
@@ -83,7 +101,7 @@ func (r *postgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain
 	return &sub, nil
 }
 
-func (r *postgresRepository) Update(ctx context.Context, id uuid.UUID, dto domain.UpdateDTO) (*domain.Subscription, error) {
+func (r *postgresRepository) Update(ctx context.Context, id uuid.UUID, dto UpdateDTO) (*domain.Subscription, error) {
 	query := `
 		UPDATE subscriptions
 		SET service_name = $1, user_id = $2, price = $3, start_date = $4, end_date = $5
