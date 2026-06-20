@@ -18,15 +18,14 @@ func NewConfig() (*Config, error) {
 	return &cfg, nil
 }
 
-/*
-
-	logger level
-
-*/
-
 type Config struct {
-	HTTP HTTPConfig
-	DB   DBConfig
+	HTTP   HTTPConfig
+	DB     DBConfig
+	Logger LoggerConfig
+}
+
+type LoggerConfig struct {
+	Level string `env:"LOG_LEVEL" env-default:"info"`
 }
 
 type HTTPConfig struct {

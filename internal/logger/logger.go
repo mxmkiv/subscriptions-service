@@ -5,14 +5,15 @@ import (
 	"os"
 )
 
-func New() *slog.Logger {
+func New(level string) *slog.Logger {
 
-	/*
-		check logger level
-	*/
+	var lvl slog.Level
+	if err := lvl.UnmarshalText([]byte(level)); err != nil {
+		lvl = slog.LevelInfo
+	}
 
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
+		Level: lvl,
 	})
 
 	return slog.New(logHandler)

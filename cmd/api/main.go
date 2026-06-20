@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
@@ -26,10 +27,11 @@ func main() {
 	}
 
 	// slog logger object
-	logger := logger.New()
+	logger := logger.New(config.Logger.Level)
+	logger.Info("logger initialized", "level", config.Logger.Level)
 
 	// db connection
-	database, err := connection.NewPostgres(config.DB.DSN())
+	database, err := connection.NewPostgres(context.Background(), config.DB.DSN())
 	if err != nil {
 		logger.Error("failed to connect db", "error", err)
 		os.Exit(1)
