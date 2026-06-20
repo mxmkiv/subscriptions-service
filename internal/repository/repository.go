@@ -92,7 +92,7 @@ func (r *postgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain
 	var sub domain.Subscription
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&sub.ID, &sub.ServiceName, &sub.UserID, &sub.Price, &sub.StartDate, &sub.EndDate)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("subscription not found")
+		return nil, domain.ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get subscription: %w", err)
@@ -113,7 +113,7 @@ func (r *postgresRepository) Update(ctx context.Context, id uuid.UUID, dto Updat
 	err := r.db.QueryRowContext(ctx, query, dto.ServiceName, dto.UserID, dto.Price, dto.StartDate, dto.EndDate, id).Scan(
 		&sub.ID, &sub.ServiceName, &sub.UserID, &sub.Price, &sub.StartDate, &sub.EndDate)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, fmt.Errorf("subscription not found")
+		return nil, domain.ErrNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to update subscription: %w", err)
@@ -137,7 +137,7 @@ func (r *postgresRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("failed to get rows affected: %w", err)
 	}
 	if rows == 0 {
-		return fmt.Errorf("subscription not found")
+		return domain.ErrNotFound
 	}
 
 	return nil

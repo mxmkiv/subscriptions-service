@@ -62,14 +62,14 @@ func (s *subscriptionService) Create(ctx context.Context, dto CreateDTO) (*domai
 
 	startDate, err := time.Parse("01-2006", dto.StartDate)
 	if err != nil {
-		return nil, fmt.Errorf("failed parse date: %w", err)
+		return nil, fmt.Errorf("failed parse date %q: %w", dto.StartDate, domain.ErrInvalidInput)
 	}
 
 	var endDate *time.Time
 	if dto.EndDate != nil {
 		parse, err := time.Parse("01-2006", *dto.EndDate)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse date: %w", err)
+			return nil, fmt.Errorf("failed to parse date %q: %w", *dto.EndDate, domain.ErrInvalidInput)
 		}
 
 		endDate = &parse
@@ -105,14 +105,14 @@ func (s *subscriptionService) Update(ctx context.Context, id uuid.UUID, dto Upda
 
 	startDate, err := time.Parse("01-2006", dto.StartDate)
 	if err != nil {
-		return nil, fmt.Errorf("failed parse date: %w", err)
+		return nil, fmt.Errorf("failed parse date %q: %w", dto.StartDate, domain.ErrInvalidInput)
 	}
 
 	var endDate *time.Time
 	if dto.EndDate != nil {
 		parse, err := time.Parse("01-2006", *dto.EndDate)
 		if err != nil {
-			return nil, fmt.Errorf("failed parse date: %w", err)
+			return nil, fmt.Errorf("failed parse date %q: %w", *dto.EndDate, domain.ErrInvalidInput)
 		}
 
 		endDate = &parse
@@ -165,12 +165,12 @@ func (s *subscriptionService) SumByPeriod(ctx context.Context, filter SumFilter)
 
 	startDate, err := time.Parse("01-2006", filter.StartDate)
 	if err != nil {
-		return 0, fmt.Errorf("failed parse date: %w", err)
+		return 0, fmt.Errorf("failed parse date %q: %w", filter.StartDate, domain.ErrInvalidInput)
 	}
 
 	endDate, err := time.Parse("01-2006", filter.EndDate)
 	if err != nil {
-		return 0, fmt.Errorf("failed parse date: %w", err)
+		return 0, fmt.Errorf("failed parse date %q: %w", filter.EndDate, domain.ErrInvalidInput)
 	}
 
 	repoFilter := repository.SumFilter{

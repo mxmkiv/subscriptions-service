@@ -1,9 +1,15 @@
 package domain
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+)
+
+var (
+	ErrNotFound     = errors.New("not found")
+	ErrInvalidInput = errors.New("invalid input")
 )
 
 type Subscription struct {
