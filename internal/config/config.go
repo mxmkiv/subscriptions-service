@@ -8,6 +8,8 @@ import (
 
 func NewConfig() (*Config, error) {
 
+	//_ = godotenv.Load()
+
 	var cfg Config
 	if err := cleanenv.ReadEnv(&cfg); err != nil {
 		return nil, fmt.Errorf("failed to read env: %w", err)
