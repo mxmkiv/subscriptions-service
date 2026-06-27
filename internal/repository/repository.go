@@ -159,7 +159,6 @@ func (r *postgresRepository) List(ctx context.Context, filter ListFilter) ([]dom
 	if filter.UserID != nil {
 		query += fmt.Sprintf(" AND user_id = $%d", argsIdx)
 		args = append(args, *filter.UserID)
-		//argsIdx++
 	}
 
 	rows, err := r.db.QueryContext(ctx, query, args...)
@@ -186,10 +185,23 @@ func (r *postgresRepository) List(ctx context.Context, filter ListFilter) ([]dom
 
 func (r *postgresRepository) SumByPeriod(ctx context.Context, filter SumFilter) (int, error) {
 	query := `
-		SELECT COALESCE(SUM(price), 0)
-		FROM subscriptions WHERE user_id=$1
-		AND start_date <= $2
-		AND (end_date IS NULL OR end_date >= $3)
+		SELECT COALESCE(SUM(
+			price * (
+				EXTRACT(YEAR FROM AGE(
+					DATE_TRUNC('month', LEAST(COALESCE(end_date, $2), $2)),
+					DATE_TRUNC('month', GREATEST(start_date, $3))
+				)) * 12 +
+				EXTRACT(MONTH FROM AGE(
+					DATE_TRUNC('month', LEAST(COALESCE(end_date, $2), $2)),
+					DATE_TRUNC('month', GREATEST(start_date, $3))
+				)) + 1
+			)::INTEGER
+		), 0)
+		FROM subscriptions
+		WHERE
+			start_date <= $2
+			AND (end_date IS NULL OR end_date >= $3)
+			AND user_id = $1
 	`
 
 	args := []any{filter.UserID, filter.EndDate, filter.StartDate}
@@ -198,7 +210,6 @@ func (r *postgresRepository) SumByPeriod(ctx context.Context, filter SumFilter) 
 	if filter.ServiceName != nil {
 		query += fmt.Sprintf(" AND service_name = $%d", argIdx)
 		args = append(args, *filter.ServiceName)
-		//argIdx++
 	}
 
 	var total int
