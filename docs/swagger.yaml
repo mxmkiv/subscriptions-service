@@ -1,0 +1,234 @@
+basePath: /
+definitions:
+  handler.SubscriptionRequest:
+    properties:
+      end_date:
+        type: string
+      price:
+        type: integer
+      service_name:
+        type: string
+      start_date:
+        type: string
+      user_id:
+        type: string
+    type: object
+  handler.SubscriptionResponse:
+    properties:
+      end_date:
+        type: string
+      id:
+        type: string
+      price:
+        type: integer
+      service_name:
+        type: string
+      start_date:
+        type: string
+      user_id:
+        type: string
+    type: object
+  handler.TotalResponse:
+    properties:
+      total:
+        type: integer
+    type: object
+host: localhost:8888
+info:
+  contact: {}
+  description: REST API for managing user subscriptions
+  title: Subscriptions Service API
+  version: "1.0"
+paths:
+  /subscriptions:
+    get:
+      parameters:
+      - description: Filter by user UUID
+        in: query
+        name: user_id
+        type: string
+      - description: Filter by service name
+        in: query
+        name: service_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handler.SubscriptionResponse'
+            type: array
+        "400":
+          description: invalid user_id
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: List subscriptions
+      tags:
+      - subscriptions
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Subscription payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/handler.SubscriptionResponse'
+        "400":
+          description: invalid request body or input
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Create subscription
+      tags:
+      - subscriptions
+  /subscriptions/{id}:
+    delete:
+      parameters:
+      - description: Subscription UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: invalid id
+          schema:
+            type: string
+        "404":
+          description: subscription not found
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Delete subscription
+      tags:
+      - subscriptions
+    get:
+      parameters:
+      - description: Subscription UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SubscriptionResponse'
+        "400":
+          description: invalid id
+          schema:
+            type: string
+        "404":
+          description: subscription not found
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Get subscription by ID
+      tags:
+      - subscriptions
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Subscription UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Subscription payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SubscriptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.SubscriptionResponse'
+        "400":
+          description: invalid id or input
+          schema:
+            type: string
+        "404":
+          description: subscription not found
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Update subscription
+      tags:
+      - subscriptions
+  /subscriptions/total:
+    get:
+      parameters:
+      - description: User UUID
+        in: query
+        name: user_id
+        required: true
+        type: string
+      - description: Period start (MM-YYYY)
+        in: query
+        name: start_date
+        required: true
+        type: string
+      - description: Period end (MM-YYYY)
+        in: query
+        name: end_date
+        required: true
+        type: string
+      - description: Filter by service name
+        in: query
+        name: service_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.TotalResponse'
+        "400":
+          description: invalid input
+          schema:
+            type: string
+        "500":
+          description: internal server error
+          schema:
+            type: string
+      summary: Get total subscription cost for a period
+      tags:
+      - subscriptions
+swagger: "2.0"

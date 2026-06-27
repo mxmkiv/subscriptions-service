@@ -41,7 +41,7 @@ type SubscriptionResponse struct {
 }
 
 type TotalResponse struct {
-	Total int
+	Total int `json:"total"`
 }
 
 // helpers func
@@ -74,6 +74,16 @@ func toSubscriptionResponse(sub domain.Subscription) SubscriptionResponse {
 	return resp
 }
 
+// Create godoc
+// @Summary      Create subscription
+// @Tags         subscriptions
+// @Accept       json
+// @Produce      json
+// @Param        body  body      SubscriptionRequest  true  "Subscription payload"
+// @Success      201   {object}  SubscriptionResponse
+// @Failure      400   {string}  string               "invalid request body or input"
+// @Failure      500   {string}  string               "internal server error"
+// @Router       /subscriptions [post]
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 	var req SubscriptionRequest
@@ -110,6 +120,16 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, resp)
 }
 
+// GetByID godoc
+// @Summary      Get subscription by ID
+// @Tags         subscriptions
+// @Produce      json
+// @Param        id   path      string               true  "Subscription UUID"
+// @Success      200  {object}  SubscriptionResponse
+// @Failure      400  {string}  string               "invalid id"
+// @Failure      404  {string}  string               "subscription not found"
+// @Failure      500  {string}  string               "internal server error"
+// @Router       /subscriptions/{id} [get]
 func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	reqID := r.PathValue("id")
 
@@ -136,6 +156,18 @@ func (h *Handler) GetByID(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// Update godoc
+// @Summary      Update subscription
+// @Tags         subscriptions
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string               true  "Subscription UUID"
+// @Param        body  body      SubscriptionRequest  true  "Subscription payload"
+// @Success      200   {object}  SubscriptionResponse
+// @Failure      400   {string}  string               "invalid id or input"
+// @Failure      404   {string}  string               "subscription not found"
+// @Failure      500   {string}  string               "internal server error"
+// @Router       /subscriptions/{id} [put]
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	reqID := r.PathValue("id")
 
@@ -181,6 +213,15 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// Delete godoc
+// @Summary      Delete subscription
+// @Tags         subscriptions
+// @Param        id   path      string  true  "Subscription UUID"
+// @Success      204
+// @Failure      400  {string}  string  "invalid id"
+// @Failure      404  {string}  string  "subscription not found"
+// @Failure      500  {string}  string  "internal server error"
+// @Router       /subscriptions/{id} [delete]
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	reqID := r.PathValue("id")
 
@@ -205,6 +246,16 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// List godoc
+// @Summary      List subscriptions
+// @Tags         subscriptions
+// @Produce      json
+// @Param        user_id       query     string               false  "Filter by user UUID"
+// @Param        service_name  query     string               false  "Filter by service name"
+// @Success      200           {array}   SubscriptionResponse
+// @Failure      400           {string}  string               "invalid user_id"
+// @Failure      500           {string}  string               "internal server error"
+// @Router       /subscriptions [get]
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 	var filter service.ListFilter
@@ -239,6 +290,18 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// SumByPeriod godoc
+// @Summary      Get total subscription cost for a period
+// @Tags         subscriptions
+// @Produce      json
+// @Param        user_id       query     string         true   "User UUID"
+// @Param        start_date    query     string         true   "Period start (MM-YYYY)"
+// @Param        end_date      query     string         true   "Period end (MM-YYYY)"
+// @Param        service_name  query     string         false  "Filter by service name"
+// @Success      200           {object}  TotalResponse
+// @Failure      400           {string}  string         "invalid input"
+// @Failure      500           {string}  string         "internal server error"
+// @Router       /subscriptions/total [get]
 func (h *Handler) SumByPeriod(w http.ResponseWriter, r *http.Request) {
 
 	var sumFilter service.SumFilter
