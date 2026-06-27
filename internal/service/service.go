@@ -58,7 +58,35 @@ type SumFilter struct {
 	EndDate     string
 }
 
+// helper func
+
+func validateInput(serviceName string, price int, userID uuid.UUID) error {
+	if serviceName == "" {
+		return fmt.Errorf("service_name is required: %w", domain.ErrInvalidInput)
+	}
+	if price < 0 {
+		return fmt.Errorf("price must be non-negative: %w", domain.ErrInvalidInput)
+	}
+	if userID == uuid.Nil {
+		return fmt.Errorf("user_id is required: %w", domain.ErrInvalidInput)
+	}
+
+	return nil
+}
+
+func validateDate(startDate time.Time, endDate *time.Time) error {
+	if endDate != nil && endDate.Before(startDate) {
+		return fmt.Errorf("end_date is before start_date: %w", domain.ErrInvalidInput)
+	}
+
+	return nil
+}
+
 func (s *subscriptionService) Create(ctx context.Context, dto CreateDTO) (*domain.Subscription, error) {
+
+	if err := validateInput(dto.ServiceName, dto.Price, dto.UserID); err != nil {
+		return nil, err
+	}
 
 	startDate, err := time.Parse("01-2006", dto.StartDate)
 	if err != nil {
@@ -73,6 +101,10 @@ func (s *subscriptionService) Create(ctx context.Context, dto CreateDTO) (*domai
 		}
 
 		endDate = &parse
+	}
+
+	if err := validateDate(startDate, endDate); err != nil {
+		return nil, err
 	}
 
 	repoDTO := repository.CreateDTO{
@@ -103,6 +135,10 @@ func (s *subscriptionService) GetByID(ctx context.Context, id uuid.UUID) (*domai
 
 func (s *subscriptionService) Update(ctx context.Context, id uuid.UUID, dto UpdateDTO) (*domain.Subscription, error) {
 
+	if err := validateInput(dto.ServiceName, dto.Price, dto.UserID); err != nil {
+		return nil, err
+	}
+
 	startDate, err := time.Parse("01-2006", dto.StartDate)
 	if err != nil {
 		return nil, fmt.Errorf("failed parse date %q: %w", dto.StartDate, domain.ErrInvalidInput)
@@ -116,6 +152,10 @@ func (s *subscriptionService) Update(ctx context.Context, id uuid.UUID, dto Upda
 		}
 
 		endDate = &parse
+	}
+
+	if err := validateDate(startDate, endDate); err != nil {
+		return nil, err
 	}
 
 	repoDTO := repository.UpdateDTO{
@@ -171,6 +211,10 @@ func (s *subscriptionService) SumByPeriod(ctx context.Context, filter SumFilter)
 	endDate, err := time.Parse("01-2006", filter.EndDate)
 	if err != nil {
 		return 0, fmt.Errorf("failed parse date %q: %w", filter.EndDate, domain.ErrInvalidInput)
+	}
+
+	if err := validateDate(startDate, &endDate); err != nil {
+		return 0, err
 	}
 
 	repoFilter := repository.SumFilter{
