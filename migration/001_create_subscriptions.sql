@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS subscriptions (
@@ -10,3 +11,6 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 );
 
 CREATE INDEX idx_subscriptions_user_id ON subscriptions (user_id);
+
+-- +goose Down
+DROP TABLE IF EXISTS subscriptions;
