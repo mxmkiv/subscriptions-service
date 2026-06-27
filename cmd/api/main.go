@@ -6,14 +6,24 @@ import (
 	"net/http"
 	"os"
 
+	_ "github.com/mxmkiv/subscriptions-service/docs"
 	"github.com/mxmkiv/subscriptions-service/internal/config"
 	"github.com/mxmkiv/subscriptions-service/internal/connection"
 	"github.com/mxmkiv/subscriptions-service/internal/handler"
 	"github.com/mxmkiv/subscriptions-service/internal/logger"
+	"github.com/mxmkiv/subscriptions-service/internal/middleware"
 	"github.com/mxmkiv/subscriptions-service/internal/repository"
 	"github.com/mxmkiv/subscriptions-service/internal/service"
+	"github.com/mxmkiv/subscriptions-service/migration"
+	"github.com/pressly/goose/v3"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @title       Subscriptions Service API
+// @version     1.0
+// @description REST API for managing user subscriptions
+// @host        localhost:8888
+// @BasePath    /
 func main() {
 
 	// tmp logger
@@ -38,6 +48,19 @@ func main() {
 	}
 	defer database.Close()
 
+	// goose migration
+	if err := goose.SetDialect("postgres"); err != nil {
+		logger.Error("failed to set goose dialect", "error", err)
+		os.Exit(1)
+	}
+
+	goose.SetBaseFS(migration.FS)
+
+	if err := goose.Up(database, "."); err != nil {
+		logger.Error("failed to run migrations", "error", err)
+		os.Exit(1)
+	}
+
 	// layers
 	repo := repository.New(database)
 	service := service.New(repo)
@@ -45,16 +68,20 @@ func main() {
 
 	// routes
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /subscription", handler.Create)
-	mux.HandleFunc("GET /subscription/{id}", handler.GetByID)
-	mux.HandleFunc("PUT /subscription/{id}", handler.Update)
-	mux.HandleFunc("DELETE /subscription/{id}", handler.Delete)
+	mux.HandleFunc("POST /subscriptions", handler.Create)
+	mux.HandleFunc("GET /subscriptions/{id}", handler.GetByID)
+	mux.HandleFunc("PUT /subscriptions/{id}", handler.Update)
+	mux.HandleFunc("DELETE /subscriptions/{id}", handler.Delete)
 	mux.HandleFunc("GET /subscriptions", handler.List)
 	mux.HandleFunc("GET /subscriptions/total", handler.SumByPeriod)
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
+
+	// log all requests, disable if log_level higher then level info
+	loggedMux := middleware.LoggingRequests(logger, mux)
 
 	// server
 	logger.Info("server start", "addr", ":"+config.HTTP.Port)
-	err = http.ListenAndServe(":"+config.HTTP.Port, mux)
+	err = http.ListenAndServe(":"+config.HTTP.Port, loggedMux)
 	if err != nil {
 		logger.Error("failed to start server", "error", err)
 		os.Exit(1)
