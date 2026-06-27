@@ -24,5 +24,5 @@ func NewPostgres(ctx context.Context, dsn string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to ping db: %w", err)
 	}
 
-	return db, err
+	return db, nil
 }
